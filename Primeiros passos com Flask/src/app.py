@@ -7,6 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
+from flask_migrate import Migrate
 import sqlalchemy as sa
 
 import click
@@ -15,14 +16,16 @@ class Base(DeclarativeBase):
   pass
 
 db = SQLAlchemy(model_class=Base)
+migrate = Migrate()
 
 
 class User(db.Model):
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     username: Mapped[str] = mapped_column(sa.String, unique=True)
+    active: Mapped[bool] = mapped_column(sa.Boolean, default=True)
     
     def __repr__(self):
-        return f"Users(id={self.id!r}, username={self.username!r})"
+        return f"Users(id={self.id!r}, username={self.username!r}, active={self.active!r})"
 
 
 class Post(db.Model):
@@ -64,6 +67,7 @@ def create_app(test_config=None):
 
     app.cli.add_command(init_db_command)  
     db.init_app(app)
+    migrate.init_app(app, db)
     
     from src.controllers import user
     
