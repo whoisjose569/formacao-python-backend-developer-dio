@@ -6,7 +6,7 @@ from flask import Flask, current_app
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import Integer, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 import sqlalchemy as sa
@@ -20,11 +20,21 @@ db = SQLAlchemy(model_class=Base)
 migrate = Migrate()
 jwt = JWTManager()
 
-
+class Role(db.Model):
+    id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(sa.String, nullable=False)
+    users: Mapped[list["User"]] = relationship("User", back_populates="role")
+    
+    def __repr__(self):
+        return f"Roles(id={self.id!r}, name={self.name!r})"
+    
 class User(db.Model):
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     username: Mapped[str] = mapped_column(sa.String, unique=True)
+    password: Mapped[str] = mapped_column(sa.String, unique=True, nullable=False)
     active: Mapped[bool] = mapped_column(sa.Boolean, default=True)
+    role_id: Mapped[int] = mapped_column(sa.ForeignKey("role.id", name="fk_user_role_id"))
+    role: Mapped["Role"] = relationship("Role", back_populates="users")
     
     def __repr__(self):
         return f"Users(id={self.id!r}, username={self.username!r}, active={self.active!r})"
