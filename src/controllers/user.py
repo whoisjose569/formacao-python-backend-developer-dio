@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from src.app import User, db
+from src.app import User, db, Role
 from http import HTTPStatus
 from sqlalchemy import inspect
 from flask_jwt_extended import jwt_required
@@ -13,6 +13,13 @@ def _create_user():
     user = User(username=data['username'], password=data['password'], role_id=data['role_id'])
     
     db.session.add(user)
+    db.session.commit()
+
+def _create_role():
+    data = request.json
+    role = Role(name = data["name"])
+    
+    db.session.add(role)
     db.session.commit()
 
 def _list_users():
@@ -31,6 +38,11 @@ def handle_users():
         return {'msg': 'User created!'}, HTTPStatus.CREATED
     else:
         return {"users": _list_users()}
+
+@bp.route('/create_role', methods=["POST"])
+def create_role():
+    _create_role
+    return {"msg": "Role created!"}, HTTPStatus.CREATED
 
 @bp.route('/<int:user_id>')
 def get_user(user_id):
