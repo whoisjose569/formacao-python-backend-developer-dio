@@ -41,7 +41,7 @@ def handle_users():
 
 @bp.route('/create_role', methods=["POST"])
 def create_role():
-    _create_role
+    _create_role()
     return {"msg": "Role created!"}, HTTPStatus.CREATED
 
 @bp.route('/<int:user_id>')
