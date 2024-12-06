@@ -5,9 +5,11 @@ from flask import Flask
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 from src.models.base import db
+from flask_bcrypt import Bcrypt
 
 migrate = Migrate()
 jwt = JWTManager()
+bcrypt = Bcrypt()
 
 
 def create_app(environment=os.getenv("ENVIRONMENT", "development")):
@@ -23,6 +25,7 @@ def create_app(environment=os.getenv("ENVIRONMENT", "development")):
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
+    bcrypt.init_app(app)
     
     from src.controllers import user
     from src.controllers import auth
