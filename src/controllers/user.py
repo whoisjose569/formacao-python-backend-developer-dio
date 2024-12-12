@@ -7,16 +7,23 @@ from sqlalchemy import inspect
 from flask_jwt_extended import jwt_required
 from src.utils import requires_roles
 from src.app import bcrypt
+from src.views.user import UserSchema, CreateUserSchema
+from marshmallow import ValidationError
 
 bp = Blueprint('user', __name__, url_prefix="/users")
 
 
 def _create_user():
-    data = request.json
+    user_schema = CreateUserSchema()
+    try:
+        data = user_schema.load(request.json)
+    except ValidationError as exception:
+        return exception.messages, HTTPStatus.UNPROCESSABLE_ENTITY
     user = User(username=data['username'], password=bcrypt.generate_password_hash(data['password']), role_id=data['role_id'])
     
     db.session.add(user)
     db.session.commit()
+    return {'msg': 'User created!'}, HTTPStatus.CREATED
 
 def _create_role():
     data = request.json
@@ -25,20 +32,18 @@ def _create_role():
     db.session.add(role)
     db.session.commit()
 
+@jwt_required()
+@requires_roles('admin')
 def _list_users():
     query = db.select(User)
     users = db.session.execute(query).scalars()
-    return [
-        {"id": user.id, "username": user.username, "role": {"id": user.role.id, "name": user.role.name}} for user in users
-    ]
+    users_schema = UserSchema(many=True)
+    return users_schema.dump(users)
 
 @bp.route('/', methods=["GET", "POST"])
-@jwt_required()
-@requires_roles('admin')
 def handle_users():
     if request.method == 'POST':
-        _create_user()
-        return {'msg': 'User created!'}, HTTPStatus.CREATED
+        return _create_user()
     else:
         return {"users": _list_users()}
 
