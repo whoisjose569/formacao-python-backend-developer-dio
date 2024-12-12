@@ -10,6 +10,9 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
         exclude = ("password","role_id",)
     role = ma.Nested(RoleSchema)
 
+class UserIdParameter(ma.Schema):
+    user_id = fields.Int(required=True, strict=True)
+
 class CreateUserSchema(ma.Schema):
     username = fields.String(required=True)
     password = fields.String(required=True)
